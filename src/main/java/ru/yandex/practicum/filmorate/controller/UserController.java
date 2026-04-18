@@ -9,31 +9,32 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final List<User> users = new ArrayList<>();
-    private int nextId = 1;
+    private final Map<Integer, User> users = new ConcurrentHashMap<>();
+    private final AtomicInteger nextId = new AtomicInteger(1);
 
     @GetMapping
     public List<User> findAll() {
-        return users;
+        return new ArrayList<>(users.values());
     }
 
     @PostMapping
     public User create(@RequestBody User user) {
         validateUser(user);
 
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+        User preparedUser = normalizeUserName(user);
+        preparedUser.setId(nextId.getAndIncrement());
+        users.put(preparedUser.getId(), preparedUser);
 
-        user.setId(nextId++);
-        users.add(user);
-        log.info("Добавлен пользователь: {}", user);
-        return user;
+        log.info("Добавлен пользователь: {}", preparedUser);
+        return preparedUser;
     }
 
     @PutMapping
@@ -45,20 +46,24 @@ public class UserController {
             throw new ValidationException("Id пользователя должен быть указан");
         }
 
+        if (!users.containsKey(user.getId())) {
+            log.error("Ошибка обновления пользователя: пользователь с id={} не найден", user.getId());
+            throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
+        }
+
+        User preparedUser = normalizeUserName(user);
+        preparedUser.setId(user.getId());
+        users.put(preparedUser.getId(), preparedUser);
+
+        log.info("Обновлён пользователь: {}", preparedUser);
+        return preparedUser;
+    }
+
+    private User normalizeUserName(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+            return user.withName(user.getLogin());
         }
-
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getId().equals(user.getId())) {
-                users.set(i, user);
-                log.info("Обновлён пользователь: {}", user);
-                return user;
-            }
-        }
-
-        log.error("Ошибка обновления пользователя: пользователь с id={} не найден", user.getId());
-        throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
+        return user;
     }
 
     private void validateUser(User user) {

@@ -13,12 +13,7 @@ public class FilmValidationTest {
 
     @Test
     void shouldThrowWhenNameIsBlank() {
-        Film film = new Film();
-        film.setName(" ");
-        film.setDescription("Description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(100);
-
+        Film film = new Film(" ", "Description", LocalDate.of(2000, 1, 1), 100);
         FilmController controller = new FilmController();
 
         assertThrows(ValidationException.class, () -> controller.create(film));
@@ -26,12 +21,7 @@ public class FilmValidationTest {
 
     @Test
     void shouldThrowWhenDescriptionTooLong() {
-        Film film = new Film();
-        film.setName("Film");
-        film.setDescription("A".repeat(201));
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(100);
-
+        Film film = new Film("Film", "A".repeat(201), LocalDate.of(2000, 1, 1), 100);
         FilmController controller = new FilmController();
 
         assertThrows(ValidationException.class, () -> controller.create(film));
@@ -39,12 +29,7 @@ public class FilmValidationTest {
 
     @Test
     void shouldThrowWhenReleaseDateTooEarly() {
-        Film film = new Film();
-        film.setName("Film");
-        film.setDescription("Description");
-        film.setReleaseDate(LocalDate.of(1895, 12, 27));
-        film.setDuration(100);
-
+        Film film = new Film("Film", "Description", LocalDate.of(1895, 12, 27), 100);
         FilmController controller = new FilmController();
 
         assertThrows(ValidationException.class, () -> controller.create(film));
@@ -52,12 +37,7 @@ public class FilmValidationTest {
 
     @Test
     void shouldThrowWhenDurationNotPositive() {
-        Film film = new Film();
-        film.setName("Film");
-        film.setDescription("Description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(0);
-
+        Film film = new Film("Film", "Description", LocalDate.of(2000, 1, 1), 0);
         FilmController controller = new FilmController();
 
         assertThrows(ValidationException.class, () -> controller.create(film));
@@ -65,12 +45,7 @@ public class FilmValidationTest {
 
     @Test
     void shouldCreateValidFilm() {
-        Film film = new Film();
-        film.setName("Film");
-        film.setDescription("Description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120);
-
+        Film film = new Film("Film", "Description", LocalDate.of(2000, 1, 1), 120);
         FilmController controller = new FilmController();
 
         assertDoesNotThrow(() -> controller.create(film));

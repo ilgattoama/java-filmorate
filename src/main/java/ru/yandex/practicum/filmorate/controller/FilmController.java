@@ -9,24 +9,29 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private final List<Film> films = new ArrayList<>();
-    private int nextId = 1;
+    private final Map<Integer, Film> films = new ConcurrentHashMap<>();
+    private final AtomicInteger nextId = new AtomicInteger(1);
 
     @GetMapping
     public List<Film> findAll() {
-        return films;
+        return new ArrayList<>(films.values());
     }
 
     @PostMapping
     public Film create(@RequestBody Film film) {
         validateFilm(film);
-        film.setId(nextId++);
-        films.add(film);
+
+        film.setId(nextId.getAndIncrement());
+        films.put(film.getId(), film);
+
         log.info("Добавлен фильм: {}", film);
         return film;
     }
@@ -40,16 +45,14 @@ public class FilmController {
             throw new ValidationException("Id фильма должен быть указан");
         }
 
-        for (int i = 0; i < films.size(); i++) {
-            if (films.get(i).getId().equals(film.getId())) {
-                films.set(i, film);
-                log.info("Обновлён фильм: {}", film);
-                return film;
-            }
+        if (!films.containsKey(film.getId())) {
+            log.error("Ошибка обновления фильма: фильм с id={} не найден", film.getId());
+            throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
 
-        log.error("Ошибка обновления фильма: фильм с id={} не найден", film.getId());
-        throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
+        films.put(film.getId(), film);
+        log.info("Обновлён фильм: {}", film);
+        return film;
     }
 
     private void validateFilm(Film film) {
