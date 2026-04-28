@@ -9,11 +9,11 @@ import java.util.Set;
 
 @Getter
 @Setter
-public class Film {
+public class User {
     private Long id;
+    private String email;
+    private String login;
     private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private Integer duration;
-    private Set<Long> likes = new HashSet<>();
+    private LocalDate birthday;
+    private Set<Long> friends = new HashSet<>();
 }
