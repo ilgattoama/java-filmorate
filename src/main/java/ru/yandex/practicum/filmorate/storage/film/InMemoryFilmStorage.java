@@ -10,8 +10,8 @@ import java.util.Map;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-    private final Map<Long, Film> films = new HashMap<>();
-    private long nextId = 1;
+    private static final Map<Long, Film> films = new HashMap<>();
+    private static long nextId = 1;
 
     @Override
     public Film add(Film film) {
@@ -25,6 +25,10 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(film.getId())) {
             throw new NotFoundException("Фильм не найден");
         }
+
+        Film oldFilm = films.get(film.getId());
+        film.setLikes(oldFilm.getLikes());
+
         films.put(film.getId(), film);
         return film;
     }
@@ -32,9 +36,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film getById(Long id) {
         Film film = films.get(id);
+
         if (film == null) {
             throw new NotFoundException("Фильм не найден");
         }
+
         return film;
     }
 
@@ -48,6 +54,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(id)) {
             throw new NotFoundException("Фильм не найден");
         }
+
         films.remove(id);
     }
 }

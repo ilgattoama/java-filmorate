@@ -10,8 +10,8 @@ import java.util.Map;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
-    private final Map<Long, User> users = new HashMap<>();
-    private long nextId = 1;
+    private static final Map<Long, User> users = new HashMap<>();
+    private static long nextId = 1;
 
     @Override
     public User add(User user) {
@@ -25,6 +25,10 @@ public class InMemoryUserStorage implements UserStorage {
         if (!users.containsKey(user.getId())) {
             throw new NotFoundException("Пользователь не найден");
         }
+
+        User oldUser = users.get(user.getId());
+        user.setFriends(oldUser.getFriends());
+
         users.put(user.getId(), user);
         return user;
     }
@@ -32,9 +36,11 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User getById(Long id) {
         User user = users.get(id);
+
         if (user == null) {
             throw new NotFoundException("Пользователь не найден");
         }
+
         return user;
     }
 
@@ -48,6 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
         if (!users.containsKey(id)) {
             throw new NotFoundException("Пользователь не найден");
         }
+
         users.remove(id);
     }
 }
