@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,5 +51,17 @@ public class FilmController {
     @GetMapping("/popular")
     public List<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
         return filmService.getPopular(count);
+    }
+
+    public FilmController() {
+        this.filmStorage = new InMemoryFilmStorage();
+        this.filmService = new FilmService(
+                this.filmStorage,
+                new InMemoryUserStorage()
+        );
+    }
+
+    public Film create(Film film) {
+        return add(film);
     }
 }
