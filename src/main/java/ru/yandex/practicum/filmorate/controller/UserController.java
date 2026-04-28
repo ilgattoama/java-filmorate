@@ -2,11 +2,13 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,13 +19,34 @@ public class UserController {
     private final UserStorage userStorage;
     private final UserService userService;
 
+    public UserController() {
+        this.userStorage = new InMemoryUserStorage();
+        this.userService = new UserService(this.userStorage);
+    }
+
     @PostMapping
     public User add(@RequestBody User user) {
+        validate(user);
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+
         return userStorage.add(user);
+    }
+
+    public User create(User user) {
+        return add(user);
     }
 
     @PutMapping
     public User update(@RequestBody User user) {
+        validate(user);
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+
         return userStorage.update(user);
     }
 
@@ -57,12 +80,17 @@ public class UserController {
         return userService.getCommonFriends(id, otherId);
     }
 
-    public UserController() {
-        this.userStorage = new InMemoryUserStorage();
-        this.userService = new UserService(this.userStorage);
-    }
+    private void validate(User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+            throw new ValidationException("Некорректный email");
+        }
 
-    public User create(User user) {
-        return add(user);
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            throw new ValidationException("Логин не может быть пустым или содержать пробелы");
+        }
+
+        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть в будущем");
+        }
     }
 }
