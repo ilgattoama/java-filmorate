@@ -4,18 +4,20 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
-    private static final Map<Long, User> users = new HashMap<>();
-    private static long nextId = 1;
+    private final Map<Long, User> users = new ConcurrentHashMap<>();
+    private final AtomicLong nextId = new AtomicLong(1);
 
     @Override
     public User add(User user) {
-        user.setId(nextId++);
+        user.setId(nextId.getAndIncrement());
         users.put(user.getId(), user);
         return user;
     }
@@ -28,8 +30,8 @@ public class InMemoryUserStorage implements UserStorage {
 
         User oldUser = users.get(user.getId());
         user.setFriends(oldUser.getFriends());
-
         users.put(user.getId(), user);
+
         return user;
     }
 
@@ -45,8 +47,8 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> getAll() {
-        return users.values();
+    public List<User> getAll() {
+        return new ArrayList<>(users.values());
     }
 
     @Override
