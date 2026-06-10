@@ -58,6 +58,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
+        checkMpaExists(film);
+        checkGenresExist(film);
+
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
@@ -91,6 +94,9 @@ public class FilmDbStorage implements FilmStorage {
         if (findById(film.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
         }
+
+        checkMpaExists(film);
+        checkGenresExist(film);
 
         String sql = "UPDATE films " +
                 "SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? " +
@@ -201,6 +207,38 @@ public class FilmDbStorage implements FilmStorage {
 
         if (count == null || count == 0) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
+    }
+
+    private void checkMpaExists(Film film) {
+        if (film.getMpa() == null || film.getMpa().getId() == null) {
+            return;
+        }
+
+        String sql = "SELECT COUNT(*) FROM mpa_ratings WHERE mpa_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, film.getMpa().getId());
+
+        if (count == null || count == 0) {
+            throw new NotFoundException("Рейтинг MPA с id " + film.getMpa().getId() + " не найден");
+        }
+    }
+
+    private void checkGenresExist(Film film) {
+        if (film.getGenres() == null || film.getGenres().isEmpty()) {
+            return;
+        }
+
+        for (Genre genre : film.getGenres()) {
+            if (genre == null || genre.getId() == null) {
+                continue;
+            }
+
+            String sql = "SELECT COUNT(*) FROM genres WHERE genre_id = ?";
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, genre.getId());
+
+            if (count == null || count == 0) {
+                throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+            }
         }
     }
 

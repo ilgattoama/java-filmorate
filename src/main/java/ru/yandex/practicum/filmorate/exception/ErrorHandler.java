@@ -15,6 +15,12 @@ public class ErrorHandler {
         return Map.of("error", exception.getMessage());
     }
 
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidation(ValidationException exception) {
+        return Map.of("error", exception.getMessage());
+    }
+
     @ExceptionHandler({
             IllegalArgumentException.class,
             MethodArgumentNotValidException.class
