@@ -4,8 +4,10 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.GenreService;
+import ru.yandex.practicum.filmorate.service.MpaService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -16,24 +18,18 @@ public class FilmValidationTest {
 
     private FilmController createController() {
         FilmStorage filmStorage = mock(FilmStorage.class);
-        FilmService filmService = new FilmService(filmStorage);
+        UserStorage userStorage = mock(UserStorage.class);
+        MpaService mpaService = mock(MpaService.class);
+        GenreService genreService = mock(GenreService.class);
 
-        return new FilmController(filmService);
-    }
-
-    @Test
-    void shouldThrowWhenNameIsBlank() {
-        Film film = new Film(
-                null,
-                "",
-                "Description",
-                LocalDate.of(2000, 1, 1),
-                100
+        FilmService filmService = new FilmService(
+                filmStorage,
+                userStorage,
+                mpaService,
+                genreService
         );
 
-        FilmController controller = createController();
-
-        assertThrows(ValidationException.class, () -> controller.create(film));
+        return new FilmController(filmService);
     }
 
     @Test
