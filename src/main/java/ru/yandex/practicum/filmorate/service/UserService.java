@@ -7,80 +7,72 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
 
-    public User add(User user) {
-        validate(user);
-        normalizeName(user);
-        return userStorage.add(user);
+    public Collection<User> findAll() {
+        return userStorage.findAll();
+    }
+
+    public User findById(Integer id) {
+        return userStorage.findById(id);
+    }
+
+    public User create(User user) {
+        validateUser(user);
+        return userStorage.create(user);
     }
 
     public User update(User user) {
-        validate(user);
-        normalizeName(user);
+        validateUser(user);
+
+        if (user.getId() == null) {
+            throw new ValidationException("Id пользователя не может быть пустым");
+        }
+
         return userStorage.update(user);
     }
 
-    public List<User> getAll() {
-        return userStorage.getAll();
+    public void addFriend(Integer id, Integer friendId) {
+        userStorage.findById(id);
+        userStorage.findById(friendId);
+        userStorage.addFriend(id, friendId);
     }
 
-    public User getById(Long id) {
-        return userStorage.getById(id);
+    public void removeFriend(Integer id, Integer friendId) {
+        userStorage.findById(id);
+        userStorage.findById(friendId);
+        userStorage.removeFriend(id, friendId);
     }
 
-    public void addFriend(Long id, Long friendId) {
-        User user = userStorage.getById(id);
-        User friend = userStorage.getById(friendId);
-
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
+    public Collection<User> getFriends(Integer id) {
+        userStorage.findById(id);
+        return userStorage.getFriends(id);
     }
 
-    public void removeFriend(Long id, Long friendId) {
-        User user = userStorage.getById(id);
-        User friend = userStorage.getById(friendId);
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
+    public Collection<User> getCommonFriends(Integer id, Integer otherId) {
+        userStorage.findById(id);
+        userStorage.findById(otherId);
+        return userStorage.getCommonFriends(id, otherId);
     }
 
-    public List<User> getFriends(Long id) {
-        User user = userStorage.getById(id);
-
-        return user.getFriends().stream()
-                .map(userStorage::getById)
-                .toList();
-    }
-
-    public List<User> getCommonFriends(Long id, Long otherId) {
-        User user = userStorage.getById(id);
-        User other = userStorage.getById(otherId);
-
-        return user.getFriends().stream()
-                .filter(other.getFriends()::contains)
-                .map(userStorage::getById)
-                .toList();
-    }
-
-    private void validate(User user) {
+    private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             throw new ValidationException("Некорректный email");
         }
+
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым или содержать пробелы");
+            throw new ValidationException("Некорректный логин");
         }
-        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
+
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-    }
 
-    private void normalizeName(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }

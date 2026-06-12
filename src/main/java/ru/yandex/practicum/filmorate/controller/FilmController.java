@@ -5,21 +5,28 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.List;
+import java.util.Collection;
 
 @RestController
-@RequestMapping("/films")
 @RequiredArgsConstructor
+@RequestMapping("/films")
 public class FilmController {
+
     private final FilmService filmService;
 
-    @PostMapping
-    public Film add(@RequestBody Film film) {
-        return filmService.add(film);
+    @GetMapping
+    public Collection<Film> findAll() {
+        return filmService.findAll();
     }
 
-    public Film create(Film film) {
-        return add(film);
+    @GetMapping("/{id}")
+    public Film findById(@PathVariable("id") Long id) {
+        return filmService.findById(id);
+    }
+
+    @PostMapping
+    public Film create(@RequestBody Film film) {
+        return filmService.create(film);
     }
 
     @PutMapping
@@ -27,28 +34,20 @@ public class FilmController {
         return filmService.update(film);
     }
 
-    @GetMapping
-    public List<Film> getAll() {
-        return filmService.getAll();
-    }
-
-    @GetMapping("/{id}")
-    public Film getById(@PathVariable Long id) {
-        return filmService.getById(id);
-    }
-
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void addLike(@PathVariable("id") Long id,
+                        @PathVariable("userId") Long userId) {
         filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
-        filmService.removeLike(id, userId);
+    public void deleteLike(@PathVariable("id") Long id,
+                           @PathVariable("userId") Long userId) {
+        filmService.deleteLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopular(count);
+    public Collection<Film> findPopular(@RequestParam(defaultValue = "10") Integer count) {
+        return filmService.findPopular(count);
     }
 }
