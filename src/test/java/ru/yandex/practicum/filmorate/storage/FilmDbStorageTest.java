@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,15 +37,12 @@ class FilmDbStorageTest {
 
         Film createdFilm = filmStorage.create(film);
 
-        Optional<Film> filmOptional = filmStorage.findById(createdFilm.getId());
+        Film foundFilm = filmStorage.findById(createdFilm.getId());
 
-        assertThat(filmOptional)
-                .isPresent()
-                .hasValueSatisfying(foundFilm -> {
-                    assertThat(foundFilm.getId()).isEqualTo(createdFilm.getId());
-                    assertThat(foundFilm.getName()).isEqualTo("Test film");
-                    assertThat(foundFilm.getMpa().getId()).isEqualTo(1);
-                    assertThat(foundFilm.getGenres()).hasSize(1);
-                });
+        assertThat(foundFilm)
+                .isNotNull()
+                .usingRecursiveComparison()
+                .isEqualTo(createdFilm);
+
     }
 }

@@ -1,4 +1,4 @@
-MERGE INTO mpa_ratings KEY(mpa_id) VALUES
+MERGE INTO mpa KEY(mpa_id) VALUES
     (1, 'G'),
     (2, 'PG'),
     (3, 'PG-13'),

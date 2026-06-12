@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS mpa_ratings (
+CREATE TABLE IF NOT EXISTS mpa (
     mpa_id INTEGER PRIMARY KEY,
     name VARCHAR(20) NOT NULL UNIQUE
 );
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS films (
     release_date DATE NOT NULL,
     duration INTEGER NOT NULL,
     mpa_id INTEGER,
-    CONSTRAINT fk_films_mpa FOREIGN KEY (mpa_id) REFERENCES mpa_ratings (mpa_id)
+    CONSTRAINT fk_films_mpa FOREIGN KEY (mpa_id) REFERENCES mpa (mpa_id)
 );
 
 CREATE TABLE IF NOT EXISTS film_genres (

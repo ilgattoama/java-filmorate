@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,14 +31,11 @@ class UserDbStorageTest {
 
         User createdUser = userStorage.create(user);
 
-        Optional<User> userOptional = userStorage.findById(createdUser.getId());
+        User foundUser = userStorage.findById(createdUser.getId());
 
-        assertThat(userOptional)
-                .isPresent()
-                .hasValueSatisfying(foundUser -> {
-                    assertThat(foundUser.getId()).isEqualTo(createdUser.getId());
-                    assertThat(foundUser.getEmail()).isEqualTo("test@mail.ru");
-                    assertThat(foundUser.getLogin()).isEqualTo("testlogin");
-                });
+        assertThat(foundUser)
+                .isNotNull()
+                .usingRecursiveComparison()
+                .isEqualTo(createdUser);
     }
 }

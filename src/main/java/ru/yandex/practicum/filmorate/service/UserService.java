@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,45 +19,46 @@ public class UserService {
         return userStorage.findAll();
     }
 
-    public User findById(Long id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+    public User findById(Integer id) {
+        return userStorage.findById(id);
     }
 
     public User create(User user) {
         validateUser(user);
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
         return userStorage.create(user);
     }
 
     public User update(User user) {
         validateUser(user);
 
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+        if (user.getId() == null) {
+            throw new ValidationException("Id пользователя не может быть пустым");
         }
 
         return userStorage.update(user);
     }
 
-    public void addFriend(Long userId, Long friendId) {
-        userStorage.addFriend(userId, friendId);
+    public void addFriend(Integer id, Integer friendId) {
+        userStorage.findById(id);
+        userStorage.findById(friendId);
+        userStorage.addFriend(id, friendId);
     }
 
-    public void removeFriend(Long userId, Long friendId) {
-        userStorage.removeFriend(userId, friendId);
+    public void removeFriend(Integer id, Integer friendId) {
+        userStorage.findById(id);
+        userStorage.findById(friendId);
+        userStorage.removeFriend(id, friendId);
     }
 
-    public List<User> getFriends(Long userId) {
-        return userStorage.getFriends(userId);
+    public Collection<User> getFriends(Integer id) {
+        userStorage.findById(id);
+        return userStorage.getFriends(id);
     }
 
-    public List<User> getCommonFriends(Long userId, Long otherId) {
-        return userStorage.getCommonFriends(userId, otherId);
+    public Collection<User> getCommonFriends(Integer id, Integer otherId) {
+        userStorage.findById(id);
+        userStorage.findById(otherId);
+        return userStorage.getCommonFriends(id, otherId);
     }
 
     private void validateUser(User user) {
@@ -67,11 +67,15 @@ public class UserService {
         }
 
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым и не должен содержать пробелы");
+            throw new ValidationException("Некорректный логин");
         }
 
-        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
+        }
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
     }
 }

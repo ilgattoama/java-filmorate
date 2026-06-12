@@ -2,35 +2,39 @@ package ru.yandex.practicum.filmorate.storage.genre;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.util.Collection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class GenreDbStorage implements GenreStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Collection<Genre> findAll() {
-        String sql = "SELECT * FROM genres ORDER BY genre_id";
+    public List<Genre> findAll() {
+        String sql = "SELECT genre_id, name FROM genres ORDER BY genre_id";
         return jdbcTemplate.query(sql, this::mapGenre);
     }
 
     @Override
-    public Optional<Genre> findById(Integer id) {
-        String sql = "SELECT * FROM genres WHERE genre_id = ?";
-        List<Genre> genres = jdbcTemplate.query(sql, this::mapGenre, id);
-        return genres.stream().findFirst();
+    public Genre findById(Integer id) {
+        String sql = "SELECT genre_id, name FROM genres WHERE genre_id = ?";
+
+        return jdbcTemplate.query(sql, this::mapGenre, id)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Жанр с id " + id + " не найден."));
     }
 
-    private Genre mapGenre(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
-        return new Genre(
-                rs.getInt("genre_id"),
-                rs.getString("name")
-        );
+    private Genre mapGenre(ResultSet rs, int rowNum) throws SQLException {
+        Genre genre = new Genre();
+        genre.setId(rs.getInt("genre_id"));
+        genre.setName(rs.getString("name"));
+        return genre;
     }
 }
